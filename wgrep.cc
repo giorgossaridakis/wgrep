@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <unistd.h>
 #include <vector>
 
 #define MAXLINE 9999
@@ -12,6 +13,8 @@ using namespace std;
 
 int compareword(char tword[]);
 int separatewords(char tline[], int tlowercaseflag, int wordidtoreturn=0);
+char *myname;
+void showusage();
 // turnred text manipulator
 ostream &turnred(ostream &stream)
 {
@@ -27,7 +30,8 @@ ostream &turnoffred(ostream &stream)
  return stream;
 }
 
-int lowercaseflag=1;
+// global variables
+int lowercaseflag=1, showlinenumber=1, standardinput=0;
 char word[MAXWORD];
 struct Word {
 char lWord[MAXWORD]; };
@@ -35,42 +39,63 @@ vector<Word> words;
 
 int main(int argc, char *argv[])
 {
- int i, i1, lines=0;
+ int i, i1, c, fileread, lines=0;
  char tline[MAXLINE];
- ifstream infile(argv[2]);
+ ifstream infile;
 
-  // see if parameters are correct
-  if (argc<3 || argc>4 || !infile) {
-   cout << "wgrep <word (+ for unknown letters)> <filename> [-c match case]" << endl;
-  return -1; }
-  // parse -c option
-  if (argc==4) {
-   if (!strcmp(argv[3], "-c"))
-    lowercaseflag=0;
-   else {
-    cout << "non accepted parameter " << argv[3] << endl;
-  return -1; } }
-  // copy tolower requested word
-  for (i=0;i<strlen(argv[1]);i++)
-   word[i]=(lowercaseflag) ? tolower(argv[1][i]) : argv[1][i];
+  myname=argv[0];
+  // parse command line
+  while ((c = getopt(argc, argv, ":cq")) != -1) {
+   switch (c) {
+	case 'c':
+     lowercaseflag=0;
+    break;
+    case 'q':
+     showlinenumber=0;
+    break;
+    case '?':
+     showusage();
+  break; } }
+  // command line contains at least a pattern to look for ?
+  if (optind == argc)
+   showusage();
   
-   // loop search in requested file
-   while (infile) {
-    infile.getline(tline, MAXLINE);
-    ++lines;
-    separatewords(tline, lowercaseflag);
-    for (i=0;i<words.size();i++) {
-     if (!compareword(words[i].lWord)) {
-      cout << "line " << lines << ":";
-      for (i1=0;i1<words.size();i1++) {
-       if (i1==i)
-        cout << turnred << words[separatewords(tline, 0, i1)].lWord << " ";
-       else
-        cout << turnoffred << words[separatewords(tline, 0, i1)].lWord << " "; 
-     if (i1==words.size()-1)
-   cout << endl; } } } }
-   
-  infile.close();
+  // copy tolower requested word
+  for (i=0;i<strlen(argv[optind]);i++)
+   word[i]=(lowercaseflag) ? tolower(argv[optind][i]) : argv[optind][i];
+  ++optind;
+  if (optind==argc) // no files, default to stdin
+   standardinput=1;
+  
+   // loop search in requested files or until end of standardinput
+   while (optind<argc || standardinput) {
+    if (!standardinput) { // open next file, exit if failure
+     infile.open(argv[optind]);
+     if (!infile)
+      showusage();
+    cout << argv[optind] << "--->" << endl; }
+    while (infile || standardinput) {
+     if (!standardinput)
+      infile.getline(tline, MAXLINE);
+     else
+      cin.getline(tline, MAXLINE);
+     if (!strlen(tline))
+      standardinput=0;
+     ++lines;
+     separatewords(tline, lowercaseflag);
+     for (i=0;i<words.size();i++) {
+      if (!compareword(words[i].lWord)) {
+       if (showlinenumber)
+        cout << "line " << lines << ":";
+       for (i1=0;i1<words.size();i1++) {
+        if (i1==i)
+         cout << turnred << words[separatewords(tline, 0, i1)].lWord << turnoffred << " ";
+        else
+         cout << words[separatewords(tline, 0, i1)].lWord << " "; 
+      if (i1==words.size()-1)
+    cout << endl; } } } }
+    infile.close();
+   ++optind;  }
 }
 
 // compare word found with global word[]
@@ -105,4 +130,12 @@ int separatewords(char tline[], int tlowercaseflag, int wordidtoreturn)
    words.push_back(tword); }
 
  return wordidtoreturn;
+}
+
+// show usage
+void showusage()
+{
+   cout << "usage:" << myname << " [-c match case] [-q no line #] pattern(+ is wildcard) [files ...]" << endl;
+ 
+ exit(-1);
 }
