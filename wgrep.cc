@@ -39,7 +39,7 @@ vector<Word> words;
 
 int main(int argc, char *argv[])
 {
- int i, i1, c, fileread, lines=0;
+ int i, i1, c, lines=0;
  char tline[MAXLINE];
  ifstream infile;
 
