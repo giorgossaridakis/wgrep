@@ -27,7 +27,7 @@ ostream &turnoffred(ostream &stream)
  return stream;
 }
 
-int lowercaseflag=1, redtext=0;
+int lowercaseflag=1;
 char word[MAXWORD];
 struct Word {
 char lWord[MAXWORD]; };
