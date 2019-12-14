@@ -117,9 +117,6 @@ int separatewords(char tline[], int tlowercaseflag, int wordidtoreturn)
 {
   int i, n;
   Word tword;
-  vector<Word>::iterator p=words.begin();
-  while (p<words.end()) // because words.clear() only moves pointer, words are kept
-   words.erase(p++);
   words.clear();
     
    for (i=0;i<strlen(tline);i++) {
