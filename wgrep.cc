@@ -39,7 +39,7 @@ vector<Word> words;
 
 int main(int argc, char *argv[])
 {
- int i, i1, c, lines=0;
+ int i, i1, c, lines;
  char tline[MAXLINE];
  ifstream infile;
 
@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
   
    // loop search in requested files or until end of standardinput
    while (optind<argc || standardinput) {
+    lines=0;
     if (!standardinput) { // open next file, exit if failure
      infile.open(argv[optind]);
      if (!infile)
